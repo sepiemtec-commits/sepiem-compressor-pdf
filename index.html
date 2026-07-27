@@ -12,38 +12,29 @@
 </head>
 <body>
   <div class="bar" id="appBar">
-    <form id="uploadForm" class="bar-row" novalidate>
+    <div class="bar-row">
       <a class="brand" href="https://sepiem.com" target="_blank" rel="noopener noreferrer" aria-label="SEPIEM">
         <img src="img/logo-sepiem.png" alt="SEPIEM" class="brand-logo" />
       </a>
 
-      <button type="button" id="dropZone" class="btn" aria-label="Selecionar arquivo PDF">
-        <input type="file" id="fileInput" accept="application/pdf,.pdf" hidden />
+      <input type="file" id="fileInput" accept="application/pdf,.pdf" hidden />
+
+      <button type="button" id="selectBtn" class="btn">
         <span id="fileLabel">1. Selecionar PDF</span>
       </button>
 
-      <fieldset class="options" id="options" disabled>
-        <legend class="visually-hidden">Nível de compressão</legend>
-        <label class="btn option">
-          <input type="radio" name="quality" value="high" checked />
-          <span>2. Leve</span>
-        </label>
-      </fieldset>
-
-      <button type="submit" id="compressBtn" class="btn btn-action" disabled>
-        3. Comprimir
+      <button type="button" id="compressBtn" class="btn btn-action" disabled>
+        2. Comprimir
       </button>
 
-      <a id="downloadBtn" class="btn btn-action" href="#" download hidden>4. Baixar</a>
-      <button type="button" id="clearFile" class="btn" hidden>Limpar</button>
+      <a id="downloadBtn" class="btn btn-action" href="#" download hidden>3. Baixar</a>
       <button type="button" id="resetBtn" class="btn" hidden>Novo</button>
-    </form>
+    </div>
 
     <div class="bar-info">
       <p class="instructions">
-        PDF no navegador · máx. 50&nbsp;MB · nada é enviado a servidores ·
-        Compressão leve (melhor qualidade) · ideal para digitalizados ·
-        texto vetorial pode reduzir pouco
+        1) Selecione o PDF · 2) Clique em Comprimir · 3) Baixe o arquivo ·
+        máx. 50&nbsp;MB · processado no seu navegador (nada é enviado a servidores)
       </p>
       <div id="progressPanel" class="progress" hidden>
         <div class="progress-bar" role="progressbar" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0" id="progressBar">
@@ -53,7 +44,7 @@
       </div>
       <p id="response" class="status" role="status" aria-live="polite"></p>
       <p id="resultPanel" class="result" hidden>
-        <span id="fileMeta"><span id="fileName">—</span> · <span id="fileSize">—</span></span>
+        <span id="fileName">—</span> · <span id="fileSize">—</span>
         · Original <strong id="statOriginal">—</strong>
         → Comprimido <strong id="statCompressed">—</strong>
         · Redução <strong id="statReduction">—</strong>

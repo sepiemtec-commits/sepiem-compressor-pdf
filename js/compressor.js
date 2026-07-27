@@ -2,20 +2,14 @@
   "use strict";
 
   const MAX_BYTES = 50 * 1024 * 1024;
-
-  const QUALITY = {
-    high: { scale: 1.5, jpeg: 0.82 },
-  };
+  const QUALITY = { scale: 1.2, jpeg: 0.62 };
 
   const els = {
-    form: document.getElementById("uploadForm"),
-    dropZone: document.getElementById("dropZone"),
+    selectBtn: document.getElementById("selectBtn"),
     fileInput: document.getElementById("fileInput"),
     fileLabel: document.getElementById("fileLabel"),
     fileName: document.getElementById("fileName"),
     fileSize: document.getElementById("fileSize"),
-    clearFile: document.getElementById("clearFile"),
-    options: document.getElementById("options"),
     compressBtn: document.getElementById("compressBtn"),
     progressPanel: document.getElementById("progressPanel"),
     progressBar: document.getElementById("progressBar"),
@@ -32,6 +26,7 @@
 
   let selectedFile = null;
   let objectUrl = null;
+  let busy = false;
 
   if (window.pdfjsLib) {
     pdfjsLib.GlobalWorkerOptions.workerSrc =
@@ -75,22 +70,17 @@
 
   function clearSelection() {
     selectedFile = null;
+    busy = false;
     els.fileInput.value = "";
     els.fileLabel.textContent = "1. Selecionar PDF";
-    els.clearFile.hidden = true;
-    els.options.disabled = true;
     els.compressBtn.disabled = true;
     resetResult();
     setStatus("");
   }
 
   function isPdf(file) {
-    const nameOk = /\.pdf$/i.test(file.name || "");
-    const typeOk =
-      !file.type ||
-      file.type === "application/pdf" ||
-      file.type === "application/x-pdf";
-    return nameOk || typeOk;
+    const name = (file.name || "").toLowerCase();
+    return name.endsWith(".pdf") || file.type === "application/pdf" || file.type === "application/x-pdf";
   }
 
   function acceptFile(file) {
@@ -112,42 +102,51 @@
     els.fileLabel.textContent = file.name;
     els.fileName.textContent = file.name;
     els.fileSize.textContent = formatBytes(file.size);
-    els.clearFile.hidden = false;
-    els.options.disabled = false;
     els.compressBtn.disabled = false;
-    setStatus(`Pronto: ${file.name} (${formatBytes(file.size)}) · escolha o nível e comprima`);
+    setStatus(`Arquivo pronto · clique em 2. Comprimir`);
   }
 
-  function getSelectedQuality() {
-    const checked = els.form.querySelector('input[name="quality"]:checked');
-    return QUALITY[checked?.value] || QUALITY.high;
-  }
-
-  async function compressPdf(file, quality) {
-    if (!window.pdfjsLib || !window.jspdf?.jsPDF) {
-      throw new Error("Bibliotecas de PDF não carregaram. Verifique a conexão.");
+  async function compressPdf(file) {
+    if (!window.pdfjsLib) {
+      throw new Error("pdf.js não carregou. Atualize a página (Ctrl+F5).");
+    }
+    if (!window.jspdf || !window.jspdf.jsPDF) {
+      throw new Error("jsPDF não carregou. Atualize a página (Ctrl+F5).");
     }
 
     const { jsPDF } = window.jspdf;
     const data = new Uint8Array(await file.arrayBuffer());
-    const pdf = await pdfjsLib.getDocument({ data }).promise;
+    const loadingTask = pdfjsLib.getDocument({ data, useSystemFonts: true });
+    const pdf = await loadingTask.promise;
     const total = pdf.numPages;
+
+    if (!total) {
+      throw new Error("PDF sem páginas.");
+    }
+
     let out = null;
 
     for (let pageNum = 1; pageNum <= total; pageNum += 1) {
       const page = await pdf.getPage(pageNum);
-      const viewport = page.getViewport({ scale: quality.scale });
+      const viewport = page.getViewport({ scale: QUALITY.scale });
       const canvas = document.createElement("canvas");
       const ctx = canvas.getContext("2d", { alpha: false });
-      canvas.width = Math.floor(viewport.width);
-      canvas.height = Math.floor(viewport.height);
 
-      await page.render({ canvasContext: ctx, viewport }).promise;
+      canvas.width = Math.max(1, Math.floor(viewport.width));
+      canvas.height = Math.max(1, Math.floor(viewport.height));
+      ctx.fillStyle = "#ffffff";
+      ctx.fillRect(0, 0, canvas.width, canvas.height);
 
-      const imgData = canvas.toDataURL("image/jpeg", quality.jpeg);
+      const renderTask = page.render({
+        canvasContext: ctx,
+        viewport,
+      });
+      await renderTask.promise;
+
+      const imgData = canvas.toDataURL("image/jpeg", QUALITY.jpeg);
       const pxToPt = 72 / 96;
-      const pageWidth = (canvas.width / quality.scale) * pxToPt;
-      const pageHeight = (canvas.height / quality.scale) * pxToPt;
+      const pageWidth = (canvas.width / QUALITY.scale) * pxToPt;
+      const pageHeight = (canvas.height / QUALITY.scale) * pxToPt;
       const orientation = pageWidth >= pageHeight ? "l" : "p";
 
       if (!out) {
@@ -162,6 +161,7 @@
       }
 
       out.addImage(imgData, "JPEG", 0, 0, pageWidth, pageHeight, undefined, "FAST");
+
       canvas.width = 0;
       canvas.height = 0;
 
@@ -172,48 +172,26 @@
     return out.output("blob");
   }
 
-  els.dropZone.addEventListener("click", () => els.fileInput.click());
-
-  els.fileInput.addEventListener("change", () => {
-    acceptFile(els.fileInput.files?.[0]);
-  });
-
-  ["dragenter", "dragover"].forEach((evt) => {
-    els.dropZone.addEventListener(evt, (e) => {
-      e.preventDefault();
-      e.stopPropagation();
-    });
-  });
-
-  els.dropZone.addEventListener("drop", (e) => {
-    e.preventDefault();
-    e.stopPropagation();
-    acceptFile(e.dataTransfer?.files?.[0]);
-  });
-
-  els.clearFile.addEventListener("click", clearSelection);
-  els.resetBtn.addEventListener("click", clearSelection);
-
-  els.form.addEventListener("submit", async (event) => {
-    event.preventDefault();
+  async function onCompress() {
+    if (busy) return;
 
     if (!selectedFile) {
-      setStatus("Nenhum arquivo escolhido.", true);
+      setStatus("Selecione um PDF primeiro.", true);
       return;
     }
 
+    busy = true;
     els.compressBtn.disabled = true;
-    els.options.disabled = true;
+    els.selectBtn.disabled = true;
     els.resultPanel.hidden = true;
     els.downloadBtn.hidden = true;
     els.resetBtn.hidden = true;
     els.progressPanel.hidden = false;
     setProgress(2, "Lendo PDF…");
-    setStatus("Processando no navegador…");
+    setStatus("Comprimindo… aguarde");
 
     try {
-      const quality = getSelectedQuality();
-      const compressed = await compressPdf(selectedFile, quality);
+      const compressed = await compressPdf(selectedFile);
 
       revokeObjectUrl();
       objectUrl = URL.createObjectURL(compressed);
@@ -236,16 +214,28 @@
       setProgress(100, "Concluído");
       setStatus(
         grew
-          ? "Concluído — arquivo não ficou menor (comum em PDFs já otimizados)."
-          : "Concluído — clique em 4. Baixar."
+          ? "Concluído — o arquivo não ficou menor. Clique em 3. Baixar se quiser."
+          : "Concluído — clique em 3. Baixar"
       );
     } catch (err) {
       console.error(err);
       setStatus(err?.message || "Falha ao comprimir o PDF.", true);
       els.progressPanel.hidden = true;
     } finally {
+      busy = false;
+      els.selectBtn.disabled = false;
       els.compressBtn.disabled = !selectedFile;
-      els.options.disabled = !selectedFile;
     }
+  }
+
+  els.selectBtn.addEventListener("click", () => {
+    els.fileInput.click();
   });
+
+  els.fileInput.addEventListener("change", () => {
+    acceptFile(els.fileInput.files && els.fileInput.files[0]);
+  });
+
+  els.compressBtn.addEventListener("click", onCompress);
+  els.resetBtn.addEventListener("click", clearSelection);
 })();
