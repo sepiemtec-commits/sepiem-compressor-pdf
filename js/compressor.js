@@ -13,7 +13,7 @@
     form: document.getElementById("uploadForm"),
     dropZone: document.getElementById("dropZone"),
     fileInput: document.getElementById("fileInput"),
-    fileMeta: document.getElementById("fileMeta"),
+    fileLabel: document.getElementById("fileLabel"),
     fileName: document.getElementById("fileName"),
     fileSize: document.getElementById("fileSize"),
     clearFile: document.getElementById("clearFile"),
@@ -30,17 +30,11 @@
     downloadBtn: document.getElementById("downloadBtn"),
     resetBtn: document.getElementById("resetBtn"),
     response: document.getElementById("response"),
-    year: document.getElementById("year"),
   };
 
   let selectedFile = null;
   let objectUrl = null;
 
-  if (els.year) {
-    els.year.textContent = String(new Date().getFullYear());
-  }
-
-  // pdf.js worker
   if (window.pdfjsLib) {
     pdfjsLib.GlobalWorkerOptions.workerSrc =
       "https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js";
@@ -75,6 +69,8 @@
     revokeObjectUrl();
     els.resultPanel.hidden = true;
     els.progressPanel.hidden = true;
+    els.downloadBtn.hidden = true;
+    els.resetBtn.hidden = true;
     setProgress(0, "Preparando…");
     els.downloadBtn.removeAttribute("href");
   }
@@ -82,7 +78,8 @@
   function clearSelection() {
     selectedFile = null;
     els.fileInput.value = "";
-    els.fileMeta.hidden = true;
+    els.fileLabel.textContent = "1. Selecionar PDF";
+    els.clearFile.hidden = true;
     els.options.disabled = true;
     els.compressBtn.disabled = true;
     resetResult();
@@ -114,12 +111,13 @@
 
     selectedFile = file;
     resetResult();
+    els.fileLabel.textContent = file.name;
     els.fileName.textContent = file.name;
     els.fileSize.textContent = formatBytes(file.size);
-    els.fileMeta.hidden = false;
+    els.clearFile.hidden = false;
     els.options.disabled = false;
     els.compressBtn.disabled = false;
-    setStatus(`Arquivo pronto: ${file.name}`);
+    setStatus(`Pronto: ${file.name} (${formatBytes(file.size)}) · escolha o nível e comprima`);
   }
 
   function getSelectedQuality() {
@@ -136,13 +134,11 @@
     const data = new Uint8Array(await file.arrayBuffer());
     const pdf = await pdfjsLib.getDocument({ data }).promise;
     const total = pdf.numPages;
-
     let out = null;
 
     for (let pageNum = 1; pageNum <= total; pageNum += 1) {
       const page = await pdf.getPage(pageNum);
       const viewport = page.getViewport({ scale: quality.scale });
-
       const canvas = document.createElement("canvas");
       const ctx = canvas.getContext("2d", { alpha: false });
       canvas.width = Math.floor(viewport.width);
@@ -151,9 +147,6 @@
       await page.render({ canvasContext: ctx, viewport }).promise;
 
       const imgData = canvas.toDataURL("image/jpeg", quality.jpeg);
-
-      // PDF points: 1pt = 1/72"; pdf.js viewport at scale 1 ≈ CSS px at 96dpi.
-      // Convert rendered pixels back to points for page size.
       const pxToPt = 72 / 96;
       const pageWidth = (canvas.width / quality.scale) * pxToPt;
       const pageHeight = (canvas.height / quality.scale) * pxToPt;
@@ -171,28 +164,17 @@
       }
 
       out.addImage(imgData, "JPEG", 0, 0, pageWidth, pageHeight, undefined, "FAST");
-
       canvas.width = 0;
       canvas.height = 0;
 
-      const pct = (pageNum / total) * 100;
-      setProgress(pct, `Comprimindo página ${pageNum} de ${total}…`);
-      // Yield so the UI can update
+      setProgress((pageNum / total) * 100, `Página ${pageNum}/${total}`);
       await new Promise((r) => setTimeout(r, 0));
     }
 
-    const blob = out.output("blob");
-    return blob;
+    return out.output("blob");
   }
 
-  // Drop zone interactions
   els.dropZone.addEventListener("click", () => els.fileInput.click());
-  els.dropZone.addEventListener("keydown", (e) => {
-    if (e.key === "Enter" || e.key === " ") {
-      e.preventDefault();
-      els.fileInput.click();
-    }
-  });
 
   els.fileInput.addEventListener("change", () => {
     acceptFile(els.fileInput.files?.[0]);
@@ -202,21 +184,13 @@
     els.dropZone.addEventListener(evt, (e) => {
       e.preventDefault();
       e.stopPropagation();
-      els.dropZone.classList.add("is-dragover");
-    });
-  });
-
-  ["dragleave", "drop"].forEach((evt) => {
-    els.dropZone.addEventListener(evt, (e) => {
-      e.preventDefault();
-      e.stopPropagation();
-      els.dropZone.classList.remove("is-dragover");
     });
   });
 
   els.dropZone.addEventListener("drop", (e) => {
-    const file = e.dataTransfer?.files?.[0];
-    acceptFile(file);
+    e.preventDefault();
+    e.stopPropagation();
+    acceptFile(e.dataTransfer?.files?.[0]);
   });
 
   els.clearFile.addEventListener("click", clearSelection);
@@ -233,6 +207,8 @@
     els.compressBtn.disabled = true;
     els.options.disabled = true;
     els.resultPanel.hidden = true;
+    els.downloadBtn.hidden = true;
+    els.resetBtn.hidden = true;
     els.progressPanel.hidden = false;
     setProgress(2, "Lendo PDF…");
     setStatus("Processando no navegador…");
@@ -246,25 +222,24 @@
 
       const original = selectedFile.size;
       const next = compressed.size;
-      const reduction = original > 0 ? ((1 - next / original) * 100) : 0;
+      const reduction = original > 0 ? (1 - next / original) * 100 : 0;
       const grew = next >= original;
 
       els.statOriginal.textContent = formatBytes(original);
       els.statCompressed.textContent = formatBytes(next);
-      els.statReduction.textContent = grew
-        ? "Sem redução"
-        : `${reduction.toFixed(1)}%`;
+      els.statReduction.textContent = grew ? "Sem redução" : `${reduction.toFixed(1)}%`;
 
       const base = selectedFile.name.replace(/\.pdf$/i, "") || "documento";
       els.downloadBtn.href = objectUrl;
       els.downloadBtn.download = `${base}-comprimido.pdf`;
-
+      els.downloadBtn.hidden = false;
+      els.resetBtn.hidden = false;
       els.resultPanel.hidden = false;
       setProgress(100, "Concluído");
       setStatus(
         grew
-          ? "Compressão concluída, mas o arquivo não ficou menor (comum em PDFs já otimizados)."
-          : "Compressão concluída com sucesso."
+          ? "Concluído — arquivo não ficou menor (comum em PDFs já otimizados)."
+          : "Concluído — clique em 4. Baixar."
       );
     } catch (err) {
       console.error(err);
