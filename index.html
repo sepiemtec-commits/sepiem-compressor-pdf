@@ -3,12 +3,13 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate" />
   <title>Compressor de PDF | SEPIEM Consultoria</title>
   <meta name="description" content="Comprima documentos PDF no navegador. SEPIEM Consultoria." />
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=Quicksand:wght@400;500;600;700&display=swap" rel="stylesheet" />
-  <link rel="stylesheet" href="css/styles.css" />
+  <link rel="stylesheet" href="css/styles.css?v=5" />
 </head>
 <body>
   <div class="bar" id="appBar">
@@ -34,7 +35,7 @@
     <div class="bar-info">
       <p class="instructions">
         1) Selecione o PDF · 2) Clique em Comprimir · 3) Baixe o arquivo ·
-        máx. 50&nbsp;MB · processado no seu navegador (nada é enviado a servidores)
+        máx. 50&nbsp;MB · processado no navegador (nada é enviado a servidores)
       </p>
       <div id="progressPanel" class="progress" hidden>
         <div class="progress-bar" role="progressbar" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0" id="progressBar">
@@ -54,6 +55,6 @@
 
   <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
-  <script src="js/compressor.js"></script>
+  <script src="js/compressor.js?v=5"></script>
 </body>
 </html>
