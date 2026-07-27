@@ -1,16 +1,22 @@
 :root {
-  --ink: #0e1a24;
-  --muted: #4a5a66;
-  --line: #0e1a24;
-  --bg: #ffffff;
-  --fill: #e8eef0;
-  --fill-on: #1a6b6b;
-  --fill-on-text: #ffffff;
-  --action: #0e1a24;
-  --action-text: #ffffff;
-  --ok: #1f6b4a;
+  /* 50% azul · 30% cinza · 20% branco — cores da logo SEPIEM */
+  --blue: #0077a8;
+  --blue-deep: #006088;
+  --blue-light: #58c8e8;
+  --gray: #303840;
+  --gray-soft: #5a6570;
+  --white: #ffffff;
+  --line: var(--gray);
+  --bg: var(--white);
+  --fill: var(--blue);
+  --fill-text: var(--white);
+  --fill-on: var(--blue-light);
+  --fill-on-text: var(--gray);
+  --action: var(--blue-deep);
+  --action-text: var(--white);
+  --ok: var(--blue-deep);
   --danger: #9b2c2c;
-  --font: "DM Sans", sans-serif;
+  --font: "Quicksand", sans-serif;
   --bar-h: 8cm;
 }
 
@@ -26,8 +32,8 @@ body {
   padding: 0;
   height: 100%;
   font-family: var(--font);
-  color: var(--ink);
-  background: var(--bg);
+  color: var(--gray);
+  background: var(--white);
 }
 
 .visually-hidden {
@@ -49,8 +55,8 @@ body {
   justify-content: center;
   gap: 0.35rem;
   padding: 0.4rem 0.5rem;
-  border: 1px solid var(--line);
-  background: var(--bg);
+  border: 1px solid var(--gray);
+  background: var(--white);
   overflow: hidden;
 }
 
@@ -69,13 +75,18 @@ body {
   align-items: center;
   justify-content: center;
   flex: 0 0 auto;
-  padding: 0 0.65rem;
-  border: 1px solid var(--line);
-  background: var(--bg);
-  font-size: 0.72rem;
-  font-weight: 700;
-  letter-spacing: 0.08em;
-  white-space: nowrap;
+  padding: 0.2rem 0.55rem;
+  border: 1px solid var(--gray);
+  background: var(--white);
+  text-decoration: none;
+}
+
+.brand-logo {
+  display: block;
+  height: clamp(1.4rem, 3.2vh, 2.1rem);
+  width: auto;
+  max-width: 7.5rem;
+  object-fit: contain;
 }
 
 .btn,
@@ -89,10 +100,10 @@ body {
   min-width: 0;
   margin: 0;
   padding: 0.35rem 0.4rem;
-  border: 1px solid var(--line);
+  border: 1px solid var(--gray);
   border-radius: 0;
-  background: var(--fill);
-  color: var(--ink);
+  background: var(--blue);
+  color: var(--white);
   font-family: inherit;
   font-size: clamp(0.65rem, 1.35vw, 0.82rem);
   font-weight: 600;
@@ -106,7 +117,8 @@ body {
 
 .btn:hover:not(:disabled),
 .option:hover {
-  background: #d7e0e3;
+  background: var(--blue-deep);
+  color: var(--white);
 }
 
 .btn:disabled {
@@ -115,15 +127,15 @@ body {
 }
 
 .btn-action {
-  background: var(--action);
-  color: var(--action-text);
-  border-color: var(--action);
+  background: var(--blue-deep);
+  color: var(--white);
+  border-color: var(--gray);
 }
 
 .btn-action:hover:not(:disabled) {
-  background: var(--fill-on);
-  border-color: var(--fill-on);
-  color: var(--fill-on-text);
+  background: var(--blue-light);
+  color: var(--gray);
+  border-color: var(--gray);
 }
 
 .options {
@@ -144,12 +156,8 @@ body {
 .option {
   position: relative;
   padding: 0;
-}
-
-.option input {
-  position: absolute;
-  opacity: 0;
-  pointer-events: none;
+  background: var(--gray);
+  color: var(--white);
 }
 
 .option span {
@@ -160,16 +168,23 @@ body {
   height: 100%;
   padding: 0.35rem 0.3rem;
   border: 1px solid transparent;
+  color: inherit;
+}
+
+.option input {
+  position: absolute;
+  opacity: 0;
+  pointer-events: none;
 }
 
 .option input:checked + span {
-  background: var(--fill-on);
-  color: var(--fill-on-text);
+  background: var(--blue-light);
+  color: var(--gray);
 }
 
 .option input:focus-visible + span {
-  outline: 2px solid var(--ink);
-  outline-offset: -2px;
+  outline: 2px solid var(--white);
+  outline-offset: -3px;
 }
 
 #dropZone {
@@ -190,6 +205,7 @@ body {
   flex-direction: column;
   gap: 0.15rem;
   min-height: 0;
+  background: var(--white);
 }
 
 .instructions,
@@ -197,8 +213,9 @@ body {
 .result {
   margin: 0;
   font-size: clamp(0.58rem, 1.1vw, 0.72rem);
+  font-weight: 500;
   line-height: 1.25;
-  color: var(--muted);
+  color: var(--gray-soft);
 }
 
 .status.is-error {
@@ -206,7 +223,7 @@ body {
 }
 
 .result strong {
-  color: var(--ok);
+  color: var(--blue-deep);
   font-weight: 700;
 }
 
@@ -215,21 +232,21 @@ body {
   align-items: center;
   gap: 0.5rem;
   font-size: clamp(0.58rem, 1.1vw, 0.72rem);
-  color: var(--muted);
+  color: var(--gray-soft);
 }
 
 .progress-bar {
   flex: 1 1 auto;
   height: 6px;
-  border: 1px solid var(--line);
-  background: var(--bg);
+  border: 1px solid var(--gray);
+  background: var(--white);
   overflow: hidden;
 }
 
 .progress-fill {
   height: 100%;
   width: 0%;
-  background: var(--fill-on);
+  background: linear-gradient(90deg, var(--blue-deep), var(--blue-light));
   box-shadow: none;
 }
 
