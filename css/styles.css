@@ -140,7 +140,7 @@ body {
 
 .options {
   display: flex;
-  flex: 2.4 1 0;
+  flex: 1 1 0;
   gap: 0.35rem;
   margin: 0;
   padding: 0;

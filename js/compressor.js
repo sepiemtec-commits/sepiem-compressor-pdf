@@ -5,8 +5,6 @@
 
   const QUALITY = {
     high: { scale: 1.5, jpeg: 0.82 },
-    medium: { scale: 1.2, jpeg: 0.62 },
-    low: { scale: 0.9, jpeg: 0.42 },
   };
 
   const els = {
@@ -122,7 +120,7 @@
 
   function getSelectedQuality() {
     const checked = els.form.querySelector('input[name="quality"]:checked');
-    return QUALITY[checked?.value] || QUALITY.medium;
+    return QUALITY[checked?.value] || QUALITY.high;
   }
 
   async function compressPdf(file, quality) {
