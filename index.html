@@ -1,0 +1,165 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Compressor de PDF | SEPIEM Consultoria</title>
+  <meta name="description" content="Comprima documentos PDF com segurança no navegador. Ferramenta SEPIEM Consultoria." />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,400;0,9..40,500;0,9..40,600;0,9..40,700;1,9..40,400&family=Instrument+Serif:ital@0;1&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="css/styles.css" />
+</head>
+<body>
+  <div class="bg-grid" aria-hidden="true"></div>
+  <div class="bg-glow" aria-hidden="true"></div>
+
+  <header class="site-header">
+    <a class="brand" href="https://sepiem.com" target="_blank" rel="noopener noreferrer">
+      <span class="brand-mark" aria-hidden="true"></span>
+      <span class="brand-text">
+        <strong>SEPIEM</strong>
+        <span>Consultoria</span>
+      </span>
+    </a>
+    <nav class="header-nav">
+      <a href="https://sepiem.com" target="_blank" rel="noopener noreferrer">sepiem.com</a>
+    </nav>
+  </header>
+
+  <main>
+    <section class="hero">
+      <p class="eyebrow">Ferramenta interna · Documentos</p>
+      <h1>Compressor de <em>PDF</em></h1>
+      <p class="lede">
+        Reduza o tamanho dos seus arquivos PDF diretamente no navegador.
+        Nada é enviado a servidores — o processamento ocorre no seu dispositivo.
+      </p>
+    </section>
+
+    <section class="workspace" aria-labelledby="upload-heading">
+      <h2 id="upload-heading" class="visually-hidden">Enviar e comprimir PDF</h2>
+
+      <form id="uploadForm" class="upload-panel" novalidate>
+        <div
+          id="dropZone"
+          class="drop-zone"
+          tabindex="0"
+          role="button"
+          aria-label="Selecionar ou soltar arquivo PDF"
+        >
+          <input
+            type="file"
+            id="fileInput"
+            accept="application/pdf,.pdf"
+            hidden
+          />
+          <div class="drop-zone-inner">
+            <div class="drop-icon" aria-hidden="true">
+              <svg width="40" height="40" viewBox="0 0 40 40" fill="none">
+                <path d="M20 6v20M20 6l-7 7M20 6l7 7" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                <path d="M8 30h24" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+              </svg>
+            </div>
+            <p class="drop-title">Arraste o PDF aqui</p>
+            <p class="drop-hint">ou <span>clique para selecionar</span> · máx. 50&nbsp;MB</p>
+          </div>
+        </div>
+
+        <div id="fileMeta" class="file-meta" hidden>
+          <div class="file-meta-row">
+            <div>
+              <p class="file-name" id="fileName">—</p>
+              <p class="file-size" id="fileSize">—</p>
+            </div>
+            <button type="button" id="clearFile" class="btn-ghost">Remover</button>
+          </div>
+        </div>
+
+        <fieldset class="options" id="options" disabled>
+          <legend>Nível de compressão</legend>
+          <div class="option-grid" role="radiogroup" aria-label="Nível de compressão">
+            <label class="option">
+              <input type="radio" name="quality" value="high" />
+              <span class="option-card">
+                <strong>Leve</strong>
+                <small>Melhor qualidade · menor redução</small>
+              </span>
+            </label>
+            <label class="option">
+              <input type="radio" name="quality" value="medium" checked />
+              <span class="option-card">
+                <strong>Equilibrado</strong>
+                <small>Recomendado para a maioria</small>
+              </span>
+            </label>
+            <label class="option">
+              <input type="radio" name="quality" value="low" />
+              <span class="option-card">
+                <strong>Máximo</strong>
+                <small>Menor arquivo · qualidade reduzida</small>
+              </span>
+            </label>
+          </div>
+        </fieldset>
+
+        <div class="actions">
+          <button type="submit" id="compressBtn" class="btn-primary" disabled>
+            Comprimir PDF
+          </button>
+        </div>
+      </form>
+
+      <div id="progressPanel" class="progress-panel" hidden>
+        <div class="progress-bar" role="progressbar" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0" id="progressBar">
+          <div class="progress-fill" id="progressFill"></div>
+        </div>
+        <p class="progress-label" id="progressLabel">Preparando…</p>
+      </div>
+
+      <div id="resultPanel" class="result-panel" hidden>
+        <div class="result-stats">
+          <div class="stat">
+            <span class="stat-label">Original</span>
+            <span class="stat-value" id="statOriginal">—</span>
+          </div>
+          <div class="stat-arrow" aria-hidden="true">→</div>
+          <div class="stat">
+            <span class="stat-label">Comprimido</span>
+            <span class="stat-value" id="statCompressed">—</span>
+          </div>
+          <div class="stat highlight">
+            <span class="stat-label">Redução</span>
+            <span class="stat-value" id="statReduction">—</span>
+          </div>
+        </div>
+        <div class="result-actions">
+          <a id="downloadBtn" class="btn-primary" href="#" download>Baixar PDF comprimido</a>
+          <button type="button" id="resetBtn" class="btn-ghost">Novo arquivo</button>
+        </div>
+      </div>
+
+      <p id="response" class="status-msg" role="status" aria-live="polite"></p>
+    </section>
+
+    <section class="notes">
+      <h2>Como funciona</h2>
+      <ul>
+        <li>O PDF é convertido página a página e regravado com imagens otimizadas.</li>
+        <li>Ideal para documentos digitalizados e PDFs com muitas imagens.</li>
+        <li>Arquivos com texto vetorial puro podem ter ganho menor de compressão.</li>
+      </ul>
+    </section>
+  </main>
+
+  <footer class="site-footer">
+    <p>© <span id="year"></span> SEPIEM LTDA · CNPJ 42.695.934/0001-35</p>
+    <p><a href="https://sepiem.com" target="_blank" rel="noopener noreferrer">sepiem.com</a></p>
+  </footer>
+
+  <!-- pdf.js e jsPDF via CDN -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+  <script src="js/compressor.js"></script>
+</body>
+</html>
